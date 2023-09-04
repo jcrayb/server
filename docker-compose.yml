@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  tunnel:
+    network_mode: host
+    image: cloudflare/cloudflared
+    command:  "tunnel --no-autoupdate run --token ${CLOUDFLARE_TOKEN}"
+  nginx:
+    network_mode: host
+    image: nginx:latest
+    ports:
+      - "443:443"
+    volumes:
+      - ./conf:/etc/nginx/conf.d
+      - ./cert:/etc/nginx/cert
+
