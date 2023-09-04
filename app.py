@@ -12,39 +12,15 @@ import py_vollib.black_scholes.greeks.analytical as pyv
 
 app = Flask(__name__, static_folder='static')
 
+dev_db_folder = '/home/jcrayb/Documents/dev-db'
 
-connection=sqlite3.connect('db/options.db', check_same_thread=False)
+## DEV DB ##
+connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
+
+## PROD DB ##
+#connection=sqlite3.connect('./db/options.db', check_same_thread=False)
 c=connection.cursor()
 
-## SECURITY ##
-'''ipDict = {'103': ['103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22'],
-'104': ['104.16.0.0/13', '104.24.0.0/14'],
-'108': ['108.162.192.0/18'],
-'131': ['131.0.72.0/22'],
-'141': ['141.101.64.0/18'],
-'162': ['162.158.0.0/15'],
-'172': ['172.64.0.0/13'],
-'173': ['173.245.48.0/20'],
-'188': ['188.114.96.0/20'],
-'190': ['190.93.240.0/20'],
-'197': ['197.234.240.0/22'],
-'198': ['198.41.128.0/17']}
-
-@app.before_request
-def limit_remote_addr():
-    client_ip = str(request.remote_addr)
-    isValid = False
-    try:
-        ipRanges = ipDict[client_ip.split('.')[0]]
-        for ipRange in ipRanges:
-            if ipaddress.IPv4Address(client_ip) in ipaddress.IPv4Network(ipRange):
-                isValid = True
-                break
-        if not isValid:
-            abort(403)
-    except Exception as e:
-        abort(403)'''
-## SECURITY ##
 
 ##graph related stuff##
 
@@ -167,35 +143,28 @@ def graphOptionImg(ticker, strike, exp, type_, startDate, endDate, graphType):
 
 
 
-def returnStrikes(ticker, date, exp):
-    strikesList = None
-    #check if the ticker has data
-    if os.path.exists(f'../../option_data/csvs/{ticker}/{date}/{expiry} C.csv'):
-        df = pd.read_csv(f'../../option_data/csvs/{ticker}/{date}/{expiry} C.csv')
-        strikesList = df['strike']
-    elif os.path.exists(f'../../option_data/csvs/{ticker}/{date}/{expiry} P.csv'):
-        df = pd.read_csv(f'../../option_data/csvs/{ticker}/{date}/{expiry} P.csv')
-        strikesList = df['strike']
-    return strikesList
+def returnStrikes(ticker, exp):
+    data_list = c.execute(f'''
+        SELECT strike, type FROM options
+        WHERE ticker="{ticker}" AND exp="{exp}"
+        ORDER BY date DESC
+    ''').fetchall()
+    strikes = {'P':[], 'C':[]}
+    for data in data_list:
+        strike = data[0]
+        type_ = data[1] 
 
-def returnExpirations(ticker):
-    expList = None
-    #check if the ticker has data
-    if not os.path.exists(f'../../option_data/csvs/{ticker}'):
-        print(f'No option data could be found for {ticker}')
-    else:
-        expList = []
-        #if it does take date of last generated data
-        recentData = os.listdir(f'../../option_data/csvs/{ticker}')[-1]
-        files = os.listdir(f'../../option_data/csvs/{ticker}/{recentData}')
+        if not strike in strikes[type_]:
+            strikes[type_] += [strike]
+    return strikes
 
-        for file in files:
-            date = file.split(' ')[0]
-            if not date in expList:
-                expList += [date]
-        print(date)
-        #get the list of strikes from that day's data file
-    return expList
+def return_expiration_dates(ticker):
+    data_list = c.execute(f'''
+        SELECT DISTINCT exp FROM options
+        WHERE ticker="{ticker}"
+        ORDER BY date DESC
+    ''').fetchall()
+    return data_list
 
 def getGreeks(date, expiry, stockPrice, r, sigma, strike, optionType):
     flag = optionType.lower()
@@ -380,6 +349,7 @@ def graphGreeks(args):
     chart = pio.to_json(plot)
     return chart, 'none'
 
+## GRAPH ROUTES ##
 @app.route('/graph/single/', defaults={'type_':''}, methods=['GET'])
 @app.route('/graph/single/<type_>', methods=['GET', 'POST'])
 def singlePrice(type_):
@@ -392,18 +362,46 @@ def singlePrice(type_):
     print("returning graph")
     return {'message': graph , 'error':error}
 
-
-
 @app.route('/graph/single/greeks', methods=['GET'])
 def singleGreeks():
     args = request.args
     graph, error = graphGreeks(args)
     return {'message':graph, 'error':error}
+##GRAPH ROUTES ##
 ##Graph related stuff##
+
+@app.route('/get/options/strikes', methods=['GET'])
+def route_get_options_strikes() -> dict:
+    try:
+        ticker = request.args['ticker'] #str
+        exp = request.args['exp'] #str
+    except KeyError:
+        error = 'Please provide a symbol and expiry date.' 
+        return {'content': '', 'response':'ERROR', 'error':error}
+
+    strikes = returnStrikes(ticker, exp) #dict
+    return {'content': strikes, 'response':'OK', 'error':''}
+
+@app.route('/get/options/expiries', methods=['GET'])
+def route_get_options_expiries() -> dict:
+    try:
+        ticker = request.args['ticker'] #str
+    except KeyError:
+        error = 'Please provide a symbol.' 
+        return {'content': '', 'response':'ERROR', 'error':error}
+
+    data_list = return_expiration_dates(ticker) #list
+    expiries = []
+    for data in data_list:
+        exp = data[0]
+        if dt.datetime.strptime(exp, '%Y-%m-%d')>=dt.datetime.today():
+            expiries += [exp]
+    expiries.sort(key=lambda t: datetime.strptime(t, '%Y-%m-%d'))
+    return {'content': expiries, 'response':'OK', 'error':''}
 
 @app.route('/healthcheck', methods=['GET'])
 def healthcheck():
     return {'status':'healthy'}
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port="8080")
+    app.run(host="0.0.0.0", port="8080", debug=True)
