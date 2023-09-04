@@ -8,6 +8,7 @@ on:
 env:
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  IMG_NAME: ${{ vars.IMG_NAME }}
   
 
 jobs:
@@ -33,4 +34,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{env.DOCKER_USERNAME}}/graph_server:latest
+          tags: ${{env.DOCKER_USERNAME}}/${{env.IMG_NAME}}:latest
