@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_file, request, redirect, Markup, url_for, abort, jsonify
+from flask import Flask, render_template, request, make_response
 from datetime import datetime
 import datetime as dt
 import pandas as pd
@@ -374,13 +374,15 @@ def singleGreeks():
 def route_get_options_strikes() -> dict:
     try:
         ticker = request.args['ticker'] #str
-        exp = request.args['exp'] #str
+        expiry = request.args['expiry'] #str
     except KeyError:
         error = 'Please provide a symbol and expiry date.' 
         return {'content': '', 'response':'ERROR', 'error':error}
 
-    strikes = returnStrikes(ticker, exp) #dict
-    return {'content': strikes, 'response':'OK', 'error':''}
+    strikes = returnStrikes(ticker, expiry) #dict
+    response = cors_response({'content': strikes, 'response':'OK', 'error':''})
+    print(response)
+    return response
 
 @app.route('/get/options/expiries', methods=['GET'])
 def route_get_options_expiries() -> dict:
@@ -397,11 +399,18 @@ def route_get_options_expiries() -> dict:
         if dt.datetime.strptime(exp, '%Y-%m-%d')>=dt.datetime.today():
             expiries += [exp]
     expiries.sort(key=lambda t: datetime.strptime(t, '%Y-%m-%d'))
-    return {'content': expiries, 'response':'OK', 'error':''}
+
+    return response
 
 @app.route('/healthcheck', methods=['GET'])
 def healthcheck():
     return {'status':'healthy'}
+
+def cors_response(data):
+    print(data)
+    response = make_response(data)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port="8080", debug=True)
