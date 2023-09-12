@@ -13,6 +13,7 @@ import py_vollib.black_scholes.greeks.analytical as pyv
 app = Flask(__name__, static_folder='static')
 
 #dev_db_folder = '/home/jcrayb/Documents/dev-db'
+#dev_db_folder = '/home/chris/Documents/backups'
 
 ## DEV DB ##
 #connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
@@ -398,7 +399,7 @@ def route_get_options_expiries() -> dict:
         if dt.datetime.strptime(exp, '%Y-%m-%d')>=dt.datetime.today():
             expiries += [exp]
     expiries.sort(key=lambda t: datetime.strptime(t, '%Y-%m-%d'))
-    response = cors_response({'content': expiry, 'response':'OK', 'error':''})
+    response = cors_response({'content': expiries, 'response':'OK', 'error':''})
     return response
 
 @app.route('/healthcheck', methods=['GET'])
@@ -411,4 +412,5 @@ def cors_response(data):
     return response
 
 if __name__ == '__main__':
+    #app.run(host="0.0.0.0", port="8080", debug=True)
     app.run(host="0.0.0.0", port="8080")
