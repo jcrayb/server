@@ -1,15 +1,10 @@
 version: '3.8'
 services:
-  tunnel:
-    network_mode: host
-    image: cloudflare/cloudflared
-    command:  "tunnel --no-autoupdate run --token ${CLOUDFLARE_TOKEN}"
-  nginx:
-    network_mode: host
-    image: nginx:latest
-    ports:
-      - "443:443"
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PWD}
+      - POSTGRES_USER=dev
+      - PGDATA=/var/lib/postgresql/data/PGDATA
     volumes:
-      - ./conf:/etc/nginx/conf.d
-      - ./cert:/etc/nginx/cert
-
+      - ./db:/var/lib/postgresql/data
