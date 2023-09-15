@@ -396,7 +396,7 @@ def route_get_options_expiries() -> dict:
     expiries = [] #list
     for data in data_list:
         exp = data[0]
-        if dt.datetime.strptime(exp, '%Y-%m-%d')>=dt.datetime.today():
+        if dt.datetime.strptime(exp, '%Y-%m-%d')+dt.timedelta(days=1)>=dt.datetime.today():
             expiries += [exp]
     expiries.sort(key=lambda t: datetime.strptime(t, '%Y-%m-%d'))
     response = cors_response({'content': expiries, 'response':'OK', 'error':''})
