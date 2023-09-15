@@ -4,7 +4,6 @@ import datetime as dt
 import pandas as pd
 import os
 import yfinance as yf
-import numpy as np
 import plotly.io as pio
 import plotly.express as px
 import sqlite3
@@ -144,10 +143,11 @@ def graphOptionImg(ticker, strike, exp, type_, startDate, endDate, graphType):
 
 
 
-def returnStrikes(ticker, exp):
+def returnStrikes(ticker, exp, date=''):
+    modifier = f'AND date="{date}"' if date else ''
     data_list = c.execute(f'''
         SELECT strike, type FROM options
-        WHERE ticker="{ticker}" AND exp="{exp}"
+        WHERE ticker="{ticker}" AND exp="{exp}" {modifier}
         ORDER BY date DESC
     ''').fetchall()
     strikes = {'P':[], 'C':[]}
@@ -371,16 +371,29 @@ def singleGreeks():
 ##GRAPH ROUTES ##
 ##Graph related stuff##
 
-@app.route('/get/options/strikes', methods=['GET'])
-def route_get_options_strikes() -> dict:
+@app.route('/get/options/strikes', defaults={'date_type':'current'},methods=['GET'])
+@app.route('/get/options/strikes/<date_type>', methods=['GET'])
+def route_get_options_strikes(date_type) -> dict:
     try:
         ticker = request.args['ticker'] #str
         expiry = request.args['expiry'] #str
     except KeyError:
         error = 'Please provide a symbol and expiry date.' 
         return {'content': '', 'response':'ERROR', 'error':error}
-
-    strikes = returnStrikes(ticker, expiry) #dict
+    
+    if date_type == 'current':
+        strikes = returnStrikes(ticker, expiry) #dict
+    elif date_type == 'provided':
+        try:
+            date = request.args['date'] #str
+        except KeyError:
+            error = 'If asking for strikes on a specific date, please provide date.' 
+            return {'content': '', 'response':'ERROR', 'error':error}
+        strikes = returnStrikes(ticker, expiry, date) #dict
+    else:
+        error = 'Unsupported request type. "current" for most recent strikes, "provided" for strikes on a provided date' 
+        return {'content': '', 'response':'ERROR', 'error':error}
+    
     response = cors_response({'content': strikes, 'response':'OK', 'error':''})
     return response
 
@@ -412,5 +425,5 @@ def cors_response(data):
     return response
 
 if __name__ == '__main__':
-    #app.run(host="0.0.0.0", port="8080", debug=True)
+    # app.run(host="0.0.0.0", port="8080", debug=True)
     app.run(host="0.0.0.0", port="8080")
