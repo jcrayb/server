@@ -428,7 +428,8 @@ def route_get_options_highest_volume(ticker) -> dict:
     data = c.execute(f'''
         SELECT * FROM options 
         WHERE ticker="{ticker}" AND date="{last_data_day}" 
-        ORDER BY volume DESC;
+        ORDER BY volume DESC
+        LIMIT 10;
     ''').fetchall()
  
     response = cors_response({'content': data, 'response':'OK', 'error':''})
