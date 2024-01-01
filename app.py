@@ -424,7 +424,7 @@ def route_get_options_highest_volume(ticker) -> dict:
     ticker = ticker.upper()
     logs =  os.listdir(f'./db/logs')
     logs.sort()
-    last_data_day = logs[0].split('.')[-1]
+    last_data_day = logs[0].split('.')[0]
     data = c.execute(f'''
         SELECT * FROM options 
         WHERE ticker="{ticker}" AND date="{last_data_day}" 
