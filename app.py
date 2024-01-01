@@ -422,7 +422,7 @@ def route_get_options_highest_volume(ticker) -> dict:
         error = 'Please provide a symbol.' 
         return {'content': '', 'response':'ERROR', 'error':error}
     ticker = ticker.upper()
-    logs =  os.listdir(f'./logs')
+    logs =  os.listdir(f'./db/logs')
     logs.sort()
     last_data_day = logs[0].split('.')[-1]
     data = c.execute(f'''
