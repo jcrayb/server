@@ -415,6 +415,25 @@ def route_get_options_expiries() -> dict:
     response = cors_response({'content': expiries, 'response':'OK', 'error':''})
     return response
 
+@app.route('/get/options/highest-volume/', defaults={'ticker':''}, methods=['GET'])
+@app.route('/get/options/highest-volume/<ticker>', methods=['GET'])
+def route_get_options_highest_volume(ticker) -> dict:
+    if not ticker:
+        error = 'Please provide a symbol.' 
+        return {'content': '', 'response':'ERROR', 'error':error}
+    ticker = ticker.upper()
+    logs =  os.listdir(f'./logs')
+    logs.sort()
+    last_data_day = logs[0].split('.')[-1]
+    data = c.execute(f'''
+        SELECT * FROM options 
+        WHERE ticker="{ticker}" AND date="{last_data_day}" 
+        ORDER BY volume DESC;
+    ''').fetchall()
+ 
+    response = cors_response({'content': data, 'response':'OK', 'error':''})
+    return response
+
 @app.route('/healthcheck', methods=['GET'])
 def healthcheck():
     return {'status':'healthy'}
@@ -425,5 +444,5 @@ def cors_response(data):
     return response
 
 if __name__ == '__main__':
-    # app.run(host="0.0.0.0", port="8080", debug=True)
+    #app.run(host="0.0.0.0", port="8080", debug=True)
     app.run(host="0.0.0.0", port="8080")
