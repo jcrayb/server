@@ -8,8 +8,11 @@ import plotly.io as pio
 import plotly.express as px
 import sqlite3
 import py_vollib.black_scholes.greeks.analytical as pyv
+import json
 
 app = Flask(__name__, static_folder='static')
+
+company_names = json.load(open('./company_names.json', 'r'))
 
 #dev_db_folder = '/home/jcrayb/Documents/dev-db'
 #dev_db_folder = '/home/chris/Documents/backups'
@@ -434,6 +437,13 @@ def route_get_options_highest_volume(ticker) -> dict:
  
     response = cors_response({'content': data, 'response':'OK', 'error':''})
     return response
+
+@app.route('/get/names', methods=['GET'])
+def get_names():
+    companies = request.json['companies']
+    print(companies)
+    names = [company_names[company] if company in company_names else '' for company in companies ]
+    return {'names':names}
 
 @app.route('/healthcheck', methods=['GET'])
 def healthcheck():
