@@ -11,6 +11,7 @@ cryptography==41.0.3
 DateTime==5.2
 firebase-admin==6.2.0
 Flask==2.3.2
+Flask-Cors==4.0.0
 frozendict==2.3.8
 google-api-core==2.11.1
 google-api-python-client==2.97.0

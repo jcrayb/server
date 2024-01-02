@@ -9,8 +9,10 @@ import plotly.express as px
 import sqlite3
 import py_vollib.black_scholes.greeks.analytical as pyv
 import json
+from flask_cors import CORS
 
 app = Flask(__name__, static_folder='static')
+CORS(app)
 
 company_names = json.load(open('./company_names.json', 'r'))
 all_companies = json.load(open('./companies.json', 'r'))
@@ -458,9 +460,10 @@ def search_tickers(search):
     result = result[:min(limit, len(result))]
     if names:
         try:
-            names = get_names(result)['names']
-            return{'message':result, 'names':names}
-        except:
+            names = [company_names[company] if company in company_names else '' for company in result]
+            return {'message':result, 'names':names}
+        except Exception as e:
+            print(e)
             return {'message':result}
     #names = [yf.Ticker(r).info['shortName'] for r in result]
     return {'message':result}
