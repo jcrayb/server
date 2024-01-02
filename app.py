@@ -13,6 +13,7 @@ import json
 app = Flask(__name__, static_folder='static')
 
 company_names = json.load(open('./company_names.json', 'r'))
+all_companies = json.load(open('./companies.json', 'r'))
 
 #dev_db_folder = '/home/jcrayb/Documents/dev-db'
 #dev_db_folder = '/home/chris/Documents/backups'
@@ -437,6 +438,32 @@ def route_get_options_highest_volume(ticker) -> dict:
  
     response = cors_response({'content': data, 'response':'OK', 'error':''})
     return response
+
+@app.route('/search-tickers', defaults={'search': ''}, methods=['POST'])
+@app.route('/search-tickers/<search>', methods=['POST'])
+def search_tickers(search):
+    if not search:
+        return {'message':['Input empty']}
+    try:
+        limit = int(request.args['limit'])
+    except:
+        limit = 5 
+    try:
+        names = bool(request.args['names'])
+    except KeyError:
+        names = False
+
+    result = [company for company in all_companies if company.startswith(search.upper())]
+    result.sort()
+    result = result[:min(limit, len(result))]
+    if names:
+        try:
+            names = get_names(result)['names']
+            return{'message':result, 'names':names}
+        except:
+            return {'message':result}
+    #names = [yf.Ticker(r).info['shortName'] for r in result]
+    return {'message':result}
 
 @app.route('/get/names', methods=['GET'])
 def get_names():
