@@ -445,7 +445,7 @@ def route_get_options_highest_volume(ticker) -> dict:
 @app.route('/search-tickers/<search>', methods=['POST'])
 def search_tickers(search):
     if not search:
-        return {'message':['Input empty']}
+        return {'message':['']}
     try:
         limit = int(request.args['limit'])
     except:
