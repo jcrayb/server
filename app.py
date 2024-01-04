@@ -30,7 +30,7 @@ c=connection.cursor()
 
 ##graph related stuff##
 
-typesDict = {"lastPrice":"Last price",
+typesDict = {"lastPrice":"Closing Price",
              "volume":"Volume",
              "openInterest":"Open Interest",
              "impliedVolatility":"Implied Volatility"
@@ -364,9 +364,7 @@ def singlePrice(type_):
     if not type_:
         return render_template('single/graph.html')
     args = request.args
-    print("treating request")
     graph, error = index(type_, args)
-    print("returning graph")
     return {'message': graph , 'error':error}
 
 @app.route('/graph/single/greeks', methods=['GET'])
