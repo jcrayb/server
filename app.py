@@ -518,7 +518,7 @@ def route_get_options_highest_volume_n(ticker) -> dict:
         SELECT SUM(volume), exp, strike, type FROM options 
         WHERE ticker="{ticker}" AND {cond_str} 
         GROUP BY exp, strike, type
-        ORDER BY volume DESC
+        ORDER BY SUM(volume) DESC
         LIMIT 10;
     ''').fetchall()
 
