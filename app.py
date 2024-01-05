@@ -487,8 +487,8 @@ def cors_response(data):
     return response
 
 def last_n_days(n: int) -> list:
-    #logs =  os.listdir(f'./db/logs')
-    logs =  os.listdir(f'./logs')
+    logs =  os.listdir(f'./db/logs')
+    #logs =  os.listdir(f'./logs')
     logs.sort(reverse=True)
     
     last_days = [log.split('.')[0] for log in logs]
