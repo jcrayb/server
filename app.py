@@ -515,10 +515,10 @@ def route_get_options_highest_volume_n(ticker) -> dict:
     cond_str += ")"
 
     data = c.execute(f'''
-        SELECT SUM(volume), exp, strike, type FROM options 
+        SELECT SUM(volume) AS total, exp, strike, type FROM options 
         WHERE ticker="{ticker}" AND {cond_str} 
         GROUP BY exp, strike, type
-        ORDER BY SUM(volume) DESC
+        ORDER BY total DESC
         LIMIT 10;
     ''').fetchall()
 
