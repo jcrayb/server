@@ -423,7 +423,7 @@ def route_get_options_expiries() -> dict:
     response = cors_response({'content': expiries, 'response':'OK', 'error':''})
     return response
 
-@app.route('/get/options/highest-volume/', defaults={'ticker':''}, methods=['GET'])
+'''@app.route('/get/options/highest-volume/', defaults={'ticker':''}, methods=['GET'])
 @app.route('/get/options/highest-volume/<ticker>', methods=['GET'])
 def route_get_options_highest_volume(ticker) -> dict:
     if not ticker:
@@ -433,15 +433,15 @@ def route_get_options_highest_volume(ticker) -> dict:
     logs =  os.listdir(f'./db/logs')
     logs.sort()
     last_data_day = logs[-1].split('.')[0]
-    data = c.execute(f'''
+    data = c.execute(f'
         SELECT * FROM options 
         WHERE ticker="{ticker}" AND date="{last_data_day}" 
         ORDER BY volume DESC
         LIMIT 10;
-    ''').fetchall()
+    ').fetchall()
  
     response = cors_response({'content': data, 'response':'OK', 'error':''})
-    return response
+    return response'''
 
 @app.route('/search-tickers', defaults={'search': ''}, methods=['GET', 'POST'])
 @app.route('/search-tickers/<search>', methods=['GET', 'POST'])
@@ -484,6 +484,44 @@ def healthcheck():
 def cors_response(data):
     response = make_response(data)
     response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
+
+def last_n_days(n: int) -> list:
+    #logs =  os.listdir(f'./db/logs')
+    logs =  os.listdir(f'./logs')
+    logs.sort(reverse=True)
+    
+    last_days = [log.split('.')[0] for log in logs]
+    return last_days[:n]
+
+@app.route('/get/options/highest-volume/', defaults={'ticker':''}, methods=['GET'])
+@app.route('/get/options/highest-volume/<ticker>', methods=['GET'])
+def route_get_options_highest_volume_n(ticker) -> dict:
+    if not ticker:
+        error = 'Please provide a symbol.' 
+        return {'content': '', 'response':'ERROR', 'error':error}
+    if not 'n_days' in request.args:
+        n_days = 5
+    else:
+        n_days = int(request.args['n_days'])
+
+    ticker = ticker.upper()
+
+    days = last_n_days(n_days)
+
+    cond_str = f'(date = "{days[0]}"'
+    for day in days[1:]:
+        cond_str += f' OR date = "{day}"'
+    cond_str += ")"
+
+    data = c.execute(f'''
+        SELECT AVG(volume), exp, strike, type FROM options 
+        WHERE ticker="{ticker}" AND {cond_str} 
+        GROUP BY exp, strike, type
+        ORDER BY volume DESC;
+    ''').fetchall()
+
+    response = cors_response({'content': data, 'response':'OK', 'error':''})
     return response
 
 if __name__ == '__main__':
