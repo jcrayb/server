@@ -515,7 +515,7 @@ def route_get_options_highest_volume_n(ticker) -> dict:
     cond_str += ")"
 
     data = c.execute(f'''
-        SELECT AVG(volume), exp, strike, type FROM options 
+        SELECT SUM(volume), exp, strike, type FROM options 
         WHERE ticker="{ticker}" AND {cond_str} 
         GROUP BY exp, strike, type
         ORDER BY volume DESC
@@ -526,5 +526,5 @@ def route_get_options_highest_volume_n(ticker) -> dict:
     return response
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port="8080", debug=True)
-    #app.run(host="0.0.0.0", port="8080")
+    #app.run(host="0.0.0.0", port="8080", debug=True)
+    app.run(host="0.0.0.0", port="8080")
