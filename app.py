@@ -22,13 +22,13 @@ company_names = requests.get('https://files.jcrayb.com/files/config/company_name
 all_companies = requests.get('https://files.jcrayb.com/files/config/companies.json').json()
 
 #dev_db_folder = '/home/jcrayb/Documents/dev-db'
-#dev_db_folder = '/home/chris/Documents/backups'
+dev_db_folder = '/home/chris/Documents/backups'
 
 ## DEV DB ##
-#connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
+connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
 
 ## PROD DB ##
-connection=sqlite3.connect('./db/options.db', check_same_thread=False)
+#connection=sqlite3.connect('./db/options.db', check_same_thread=False)
 c=connection.cursor()
 
 
@@ -487,8 +487,8 @@ def cors_response(data):
     return response
 
 def last_n_days(n: int) -> list:
-    logs =  os.listdir(f'./db/logs')
-    #logs =  os.listdir(f'./logs')
+    #logs =  os.listdir(f'./db/logs')
+    logs =  os.listdir(f'./logs')
     logs.sort(reverse=True)
     
     last_days = [log.split('.')[0] for log in logs]
@@ -518,12 +518,13 @@ def route_get_options_highest_volume_n(ticker) -> dict:
         SELECT AVG(volume), exp, strike, type FROM options 
         WHERE ticker="{ticker}" AND {cond_str} 
         GROUP BY exp, strike, type
-        ORDER BY volume DESC;
+        ORDER BY volume DESC
+        LIMIT 10;
     ''').fetchall()
 
     response = cors_response({'content': data, 'response':'OK', 'error':''})
     return response
 
 if __name__ == '__main__':
-    #app.run(host="0.0.0.0", port="8080", debug=True)
-    app.run(host="0.0.0.0", port="8080")
+    app.run(host="0.0.0.0", port="8080", debug=True)
+    #app.run(host="0.0.0.0", port="8080")
