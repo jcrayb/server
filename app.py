@@ -9,13 +9,17 @@ import plotly.express as px
 import sqlite3
 import py_vollib.black_scholes.greeks.analytical as pyv
 import json
+import requests
 from flask_cors import CORS
 
 app = Flask(__name__, static_folder='static')
 CORS(app)
 
-company_names = json.load(open('./company_names.json', 'r'))
-all_companies = json.load(open('./companies.json', 'r'))
+#company_names = json.load(open('./company_names.json', 'r'))
+#all_companies = json.load(open('./companies.json', 'r'))
+
+company_names = requests.get('https://files.jcrayb.com/files/config/company_names.json').json()
+all_companies = requests.get('https://files.jcrayb.com/files/config/companies.json').json()
 
 #dev_db_folder = '/home/jcrayb/Documents/dev-db'
 #dev_db_folder = '/home/chris/Documents/backups'
@@ -439,8 +443,8 @@ def route_get_options_highest_volume(ticker) -> dict:
     response = cors_response({'content': data, 'response':'OK', 'error':''})
     return response
 
-@app.route('/search-tickers', defaults={'search': ''}, methods=['POST'])
-@app.route('/search-tickers/<search>', methods=['POST'])
+@app.route('/search-tickers', defaults={'search': ''}, methods=['GET', 'POST'])
+@app.route('/search-tickers/<search>', methods=['GET', 'POST'])
 def search_tickers(search):
     if not search:
         return {'message':['']}
