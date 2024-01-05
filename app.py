@@ -22,13 +22,13 @@ company_names = requests.get('https://files.jcrayb.com/files/config/company_name
 all_companies = requests.get('https://files.jcrayb.com/files/config/companies.json').json()
 
 #dev_db_folder = '/home/jcrayb/Documents/dev-db'
-dev_db_folder = '/home/chris/Documents/backups'
+#dev_db_folder = '/home/chris/Documents/backups'
 
 ## DEV DB ##
-connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
+#connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
 
 ## PROD DB ##
-#connection=sqlite3.connect('./db/options.db', check_same_thread=False)
+connection=sqlite3.connect('./db/options.db', check_same_thread=False)
 c=connection.cursor()
 
 
