@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, make_response
+from flask import Flask, render_template, request, make_response, jsonify
 from datetime import datetime
 import datetime as dt
 import pandas as pd
@@ -153,13 +153,13 @@ def graphOptionImg(ticker, strike, exp, type_, startDate, endDate, graphType):
 
 
 
-def returnStrikes(ticker, exp, date=''):
-    modifier = f'AND date="{date}"' if date else ''
+def returnStrikes(ticker, exp):
     data_list = c.execute(f'''
         SELECT strike, type FROM options
-        WHERE ticker="{ticker}" AND exp="{exp}" {modifier}
+        WHERE ticker="{ticker}" AND exp="{exp}"
         ORDER BY date DESC
     ''').fetchall()
+    
     strikes = {'P':[], 'C':[]}
     for data in data_list:
         strike = data[0]
@@ -379,37 +379,22 @@ def singleGreeks():
 ##GRAPH ROUTES ##
 ##Graph related stuff##
 
-@app.route('/get/options/strikes', defaults={'date_type':'current'},methods=['GET'])
-@app.route('/get/options/strikes/<date_type>', methods=['GET'])
-def route_get_options_strikes(date_type) -> dict:
+@app.route('/get/options/strikes/<ticker>', methods=['GET'])
+def route_get_options_strikes(ticker) -> dict:
     try:
-        ticker = request.args['ticker'] #str
         expiry = request.args['expiry'] #str
     except KeyError:
-        error = 'Please provide a symbol and expiry date.' 
+        error = 'Please provide an expiry date.' 
         return {'content': '', 'response':'ERROR', 'error':error}
     
-    if date_type == 'current':
-        strikes = returnStrikes(ticker, expiry) #dict
-    elif date_type == 'provided':
-        try:
-            date = request.args['date'] #str
-        except KeyError:
-            error = 'If asking for strikes on a specific date, please provide date.' 
-            return {'content': '', 'response':'ERROR', 'error':error}
-        strikes = returnStrikes(ticker, expiry, date) #dict
-    else:
-        error = 'Unsupported request type. "current" for most recent strikes, "provided" for strikes on a provided date' 
-        return {'content': '', 'response':'ERROR', 'error':error}
+    strikes = returnStrikes(ticker, expiry) #dict
     
     response = cors_response({'content': strikes, 'response':'OK', 'error':''})
     return response
 
-@app.route('/get/options/expiries', methods=['GET'])
-def route_get_options_expiries() -> dict:
-    try:
-        ticker = request.args['ticker'] #str
-    except KeyError:
+@app.route('/get/options/expiries/<ticker>', methods=['GET'])
+def route_get_options_expiries(ticker) -> dict:
+    if not ticker:
         error = 'Please provide a symbol.' 
         return {'content': '', 'response':'ERROR', 'error':error}
 
@@ -420,7 +405,7 @@ def route_get_options_expiries() -> dict:
         if dt.datetime.strptime(exp, '%Y-%m-%d')+dt.timedelta(days=1)>=dt.datetime.today():
             expiries += [exp]
     expiries.sort(key=lambda t: datetime.strptime(t, '%Y-%m-%d'))
-    response = cors_response({'content': expiries, 'response':'OK', 'error':''})
+    response = {'content': expiries, 'response':'OK', 'error':''}
     return response
 
 '''@app.route('/get/options/highest-volume/', defaults={'ticker':''}, methods=['GET'])
@@ -524,6 +509,46 @@ def route_get_options_highest_volume_n(ticker) -> dict:
 
     response = cors_response({'content': data, 'response':'OK', 'error':''})
     return response
+
+@app.route('/get/options/atm_strangle/<ticker>')
+def atm_strangle(ticker):
+    expiries = route_get_options_expiries(ticker)['content']
+    current_stock_price = yf.Ticker(ticker).history().iloc[-1].Close
+
+    last_day = last_n_days(1)[0]
+
+    cond_str = f'(exp = "{expiries[0]}"'
+    for day in expiries[1:]:
+        cond_str += f' OR exp = "{day}"'
+    cond_str += ")"
+
+   # print(cond_str)
+
+    atm_vol = c.execute(f'''
+    SELECT strike, exp, lastPrice, type FROM options
+    WHERE ticker="{ticker}" AND {cond_str} AND date="{last_day}"
+    ORDER BY ABS(strike-{current_stock_price}), exp
+    ''').fetchall()
+    print('done_sql')
+
+    exps = []
+    values = []
+    strangle_prices = {}
+
+    for val in atm_vol:
+        if not val[1]+val[3] in exps:
+            exps += [val[1]+val[3]] 
+            
+            if not val[1] in strangle_prices:
+                strangle_prices[val[1]] = val[2]
+            else:
+                strangle_prices[val[1]] += val[2]
+
+    print(strangle_prices)
+    strikes = []
+    diffs = []
+
+    return {'content':strangle_prices}
 
 if __name__ == '__main__':
     #app.run(host="0.0.0.0", port="8080", debug=True)
