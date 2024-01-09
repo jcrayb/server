@@ -6,6 +6,7 @@ import os
 import yfinance as yf
 import plotly.io as pio
 import plotly.express as px
+import plotly.graph_objects as go
 import sqlite3
 import py_vollib.black_scholes.greeks.analytical as pyv
 import json
@@ -408,26 +409,6 @@ def route_get_options_expiries(ticker) -> dict:
     response = {'content': expiries, 'response':'OK', 'error':''}
     return response
 
-'''@app.route('/get/options/highest-volume/', defaults={'ticker':''}, methods=['GET'])
-@app.route('/get/options/highest-volume/<ticker>', methods=['GET'])
-def route_get_options_highest_volume(ticker) -> dict:
-    if not ticker:
-        error = 'Please provide a symbol.' 
-        return {'content': '', 'response':'ERROR', 'error':error}
-    ticker = ticker.upper()
-    logs =  os.listdir(f'./db/logs')
-    logs.sort()
-    last_data_day = logs[-1].split('.')[0]
-    data = c.execute(f'
-        SELECT * FROM options 
-        WHERE ticker="{ticker}" AND date="{last_data_day}" 
-        ORDER BY volume DESC
-        LIMIT 10;
-    ').fetchall()
- 
-    response = cors_response({'content': data, 'response':'OK', 'error':''})
-    return response'''
-
 @app.route('/search-tickers', defaults={'search': ''}, methods=['GET', 'POST'])
 @app.route('/search-tickers/<search>', methods=['GET', 'POST'])
 def search_tickers(search):
@@ -481,7 +462,7 @@ def last_n_days(n: int) -> list:
 
 @app.route('/get/options/highest-volume/', defaults={'ticker':''}, methods=['GET'])
 @app.route('/get/options/highest-volume/<ticker>', methods=['GET'])
-def route_get_options_highest_volume_n(ticker) -> dict:
+def route_get_options_highest_volume(ticker) -> dict:
     if not ticker:
         error = 'Please provide a symbol.' 
         return {'content': '', 'response':'ERROR', 'error':error}
@@ -510,6 +491,37 @@ def route_get_options_highest_volume_n(ticker) -> dict:
     response = cors_response({'content': data, 'response':'OK', 'error':''})
     return response
 
+@app.route('/get/options/total-volume/', defaults={'ticker':''}, methods=['GET'])
+@app.route('/get/options/total-volume/<ticker>', methods=['GET'])
+def route_get_options_total_volume(ticker) -> dict:
+    if not ticker:
+        error = 'Please provide a symbol.' 
+        return {'content': '', 'response':'ERROR', 'error':error}
+    if not 'n_days' in request.args:
+        n_days = 5
+    else:
+        n_days = int(request.args['n_days'])
+
+    ticker = ticker.upper()
+
+    days = last_n_days(n_days)
+
+    cond_str = f'(date = "{days[0]}"'
+    for day in days[1:]:
+        cond_str += f' OR date = "{day}"'
+    cond_str += ")"
+
+    data = c.execute(f'''
+        SELECT SUM(volume) AS total, type FROM options 
+        WHERE ticker="{ticker}" AND {cond_str} 
+        GROUP BY type
+        ORDER BY total DESC
+        LIMIT 10;
+    ''').fetchall()
+
+    response = {'content': data, 'response':'OK', 'error':''}
+    return response
+
 @app.route('/get/options/atm_strangle/<ticker>')
 def atm_strangle(ticker):
     expiries = route_get_options_expiries(ticker)['content']
@@ -529,7 +541,6 @@ def atm_strangle(ticker):
     WHERE ticker="{ticker}" AND {cond_str} AND date="{last_day}"
     ORDER BY ABS(strike-{current_stock_price}), exp
     ''').fetchall()
-    print('done_sql')
 
     exps = []
     values = []
@@ -543,10 +554,6 @@ def atm_strangle(ticker):
                 strangle_prices[val[1]] = val[2]
             else:
                 strangle_prices[val[1]] += val[2]
-
-    print(strangle_prices)
-    strikes = []
-    diffs = []
 
     return {'content':strangle_prices}
 
