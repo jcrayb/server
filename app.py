@@ -29,8 +29,8 @@ all_companies = requests.get('https://files.jcrayb.com/files/config/companies.js
 #connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
 
 ## PROD DB ##
-#connection=sqlite3.connect('./db/options.db', check_same_thread=False)
-#c=connection.cursor()
+connection=sqlite3.connect('./db/options.db', check_same_thread=False)
+c=connection.cursor()
 
 
 ##graph related stuff##
@@ -575,5 +575,5 @@ def country_graph():
     return {'content':fig.to_json()}
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port="8080", debug=True)
-    #app.run(host="0.0.0.0", port="8080")
+    #app.run(host="0.0.0.0", port="8080", debug=True)
+    app.run(host="0.0.0.0", port="8080")
