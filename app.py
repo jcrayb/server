@@ -29,8 +29,8 @@ all_companies = requests.get('https://files.jcrayb.com/files/config/companies.js
 #connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
 
 ## PROD DB ##
-connection=sqlite3.connect('./db/options.db', check_same_thread=False)
-c=connection.cursor()
+#connection=sqlite3.connect('./db/options.db', check_same_thread=False)
+#c=connection.cursor()
 
 
 ##graph related stuff##
@@ -557,6 +557,23 @@ def atm_strangle(ticker):
 
     return {'content':strangle_prices}
 
+@app.route('/country_graph')
+def country_graph():
+    country_df = pd.read_csv('country_data.csv')
+
+    fig = px.choropleth(country_df, locations=country_df['index'],
+                    color="lived",
+                    range_color = (0, 1),
+                    color_continuous_scale=['white', 'red'],
+                    width= 1000,
+                    height=600,
+                    hover_name='name',
+                    hover_data={'lived':False, 'name':False, 'index':False}
+                   )
+
+    fig.update_layout(showlegend=False, coloraxis_showscale=False, margin={'r':0, 't':0, 'l':0, 'b':0})
+    return {'content':fig.to_json()}
+
 if __name__ == '__main__':
-    #app.run(host="0.0.0.0", port="8080", debug=True)
-    app.run(host="0.0.0.0", port="8080")
+    app.run(host="0.0.0.0", port="8080", debug=True)
+    #app.run(host="0.0.0.0", port="8080")
