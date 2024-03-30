@@ -23,13 +23,13 @@ company_names = requests.get('https://files.jcrayb.com/files/config/company_name
 all_companies = requests.get('https://files.jcrayb.com/files/config/companies.json').json()
 
 #dev_db_folder = '/home/jcrayb/Documents/dev-db'
-#dev_db_folder = '/home/chris/Documents/backups'
+dev_db_folder = '/home/chris/Documents/backups'
 
 ## DEV DB ##
-#connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
+connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
 
 ## PROD DB ##
-connection=sqlite3.connect('./db/options.db', check_same_thread=False)
+#connection=sqlite3.connect('./db/options.db', check_same_thread=False)
 c=connection.cursor()
 
 
@@ -442,6 +442,13 @@ def get_names():
     print(companies)
     names = [company_names[company] if company in company_names else '' for company in companies ]
     return {'names':names}
+
+@app.route('/get/name/<company>', methods=['GET'])
+def get_company_name(company):
+    print(company)
+    if not company in company_names:
+        return {'status':'ERR', 'content': 'Ticker not in our list'}, 404
+    return {'status':'OK', 'content': company_names[company]}
 
 @app.route('/healthcheck', methods=['GET'])
 def healthcheck():
