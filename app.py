@@ -445,7 +445,7 @@ def get_names():
 
 @app.route('/get/name/<company>', methods=['GET'])
 def get_company_name(company):
-    print(company)
+    company = company.upper()
     if not company in company_names:
         return {'status':'ERR', 'content': 'Ticker not in our list'}, 404
     return {'status':'OK', 'content': company_names[company]}
