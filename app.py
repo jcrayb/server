@@ -582,7 +582,7 @@ def country_graph():
     return {'content':fig.to_json()}
 
 @app.route('/f1_globe')
-def country_graph():
+def f1_globe():
     df = pd.read_csv('calendar.csv')
 
     fig = go.Figure()
