@@ -581,6 +581,54 @@ def country_graph():
     fig.update_layout(showlegend=False, coloraxis_showscale=False, margin={'r':0, 't':0, 'l':0, 'b':0})
     return {'content':fig.to_json()}
 
+@app.route('/f1_globe')
+def country_graph():
+    df = pd.read_csv('calendar.csv')
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scattergeo(
+        lat = df.lat,
+        lon = df.lon,
+        text= df.fancy_name,
+        mode = 'lines',
+        line = dict(width = 2, color = '#000000')
+    ))
+
+    fig.update_layout(
+        showlegend = False,
+        geo = dict(
+            showland = True,
+            showcountries = True,
+            showocean = True,
+            countrywidth = 0.5,
+            landcolor = '#55802e',
+            lakecolor = '#276488',
+            oceancolor = '#276488',
+            projection = dict(
+                type = 'orthographic',
+                rotation = dict(
+                    lon = 0,
+                    lat = 40,
+                    roll = 0
+                )
+            ),
+            lonaxis = dict(
+                showgrid = True,
+                gridcolor = 'rgb(102, 102, 102)',
+                gridwidth = 0.5
+            ),
+            lataxis = dict(
+                showgrid = True,
+                gridcolor = 'rgb(102, 102, 102)',
+                gridwidth = 0.5
+            )
+        ),
+        margin=dict(l=20, r=20, t=20, b=20)
+    )   
+
+    return {'content':fig.to_json()}
+
 if __name__ == '__main__':
     #app.run(host="0.0.0.0", port="8080", debug=True)
     app.run(host="0.0.0.0", port="8080")
