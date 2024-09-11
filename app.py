@@ -592,7 +592,7 @@ def f1_globe():
         lon = df.lon,
         text= df.fancy_name,
         mode = 'lines',
-        line = dict(width = 2, color = '#000000')
+        line = dict(width = 1, color = '#000000')
     ))
 
     fig.update_layout(
@@ -628,6 +628,151 @@ def f1_globe():
     )   
 
     return {'content':fig.to_json()}
+
+@app.route('/f1_map')
+def f1_map():
+    df = pd.read_csv('calendar.csv')
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scattergeo(
+        lat = df.lat,
+        lon = df.lon,
+        text= df.fancy_name,
+        mode = 'lines',
+        line = dict(width = 1, color = '#000000')
+    ))
+
+    fig.update_layout(
+        showlegend = False,
+        geo = dict(
+            showland = True,
+            showcountries = True,
+            showocean = True,
+            countrywidth = 0.5,
+            landcolor = '#55802e',
+            lakecolor = '#276488',
+            oceancolor = '#276488',
+            projection = dict(
+                type = 'natural earth',
+                rotation = dict(
+                    lon = 0,
+                    lat = 40,
+                    roll = 0
+                )
+            ),
+            lonaxis = dict(
+                showgrid = True,
+                gridcolor = 'rgb(102, 102, 102)',
+                gridwidth = 0.5
+            ),
+            lataxis = dict(
+                showgrid = True,
+                gridcolor = 'rgb(102, 102, 102)',
+                gridwidth = 0.5
+            )
+        ),
+        margin=dict(l=20, r=20, t=20, b=20)
+    )   
+
+    return {'content':fig.to_json()}
+
+@app.route('/f1_min_globe')
+def f1_min_globe():
+    df = pd.read_csv('calendar_min.csv')
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scattergeo(
+        lat = df.lat,
+        lon = df.lon,
+        text= df.fancy_name,
+        mode = 'lines',
+        line = dict(width = 1, color = '#000000')
+    ))
+
+    fig.update_layout(
+        showlegend = False,
+        geo = dict(
+            showland = True,
+            showcountries = True,
+            showocean = True,
+            countrywidth = 0.5,
+            landcolor = '#55802e',
+            lakecolor = '#276488',
+            oceancolor = '#276488',
+            projection = dict(
+                type = 'orthographic',
+                rotation = dict(
+                    lon = 0,
+                    lat = 40,
+                    roll = 0
+                )
+            ),
+            lonaxis = dict(
+                showgrid = True,
+                gridcolor = 'rgb(102, 102, 102)',
+                gridwidth = 0.5
+            ),
+            lataxis = dict(
+                showgrid = True,
+                gridcolor = 'rgb(102, 102, 102)',
+                gridwidth = 0.5
+            )
+        ),
+        margin=dict(l=20, r=20, t=20, b=20)
+    )   
+
+    return {'content':fig.to_json()}
+
+@app.route('/f1_min_map')
+def f1_min_map():
+    df = pd.read_csv('calendar_min.csv')
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scattergeo(
+        lat = df.lat,
+        lon = df.lon,
+        text= df.fancy_name,
+        mode = 'lines',
+        line = dict(width = 1, color = '#000000')
+    ))
+
+    fig.update_layout(
+        showlegend = False,
+        geo = dict(
+            showland = True,
+            showcountries = True,
+            showocean = True,
+            countrywidth = 0.5,
+            landcolor = '#55802e',
+            lakecolor = '#276488',
+            oceancolor = '#276488',
+            projection = dict(
+                type = 'natural earth',
+                rotation = dict(
+                    lon = 0,
+                    lat = 40,
+                    roll = 0
+                )
+            ),
+            lonaxis = dict(
+                showgrid = True,
+                gridcolor = 'rgb(102, 102, 102)',
+                gridwidth = 0.5
+            ),
+            lataxis = dict(
+                showgrid = True,
+                gridcolor = 'rgb(102, 102, 102)',
+                gridwidth = 0.5
+            )
+        ),
+        margin=dict(l=20, r=20, t=20, b=20)
+    )   
+
+    return {'content':fig.to_json()}
+
 
 if __name__ == '__main__':
     #app.run(host="0.0.0.0", port="8080", debug=True)
