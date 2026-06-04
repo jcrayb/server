@@ -8,3 +8,17 @@ services:
       - PGDATA=/var/lib/postgresql/data/PGDATA
     volumes:
       - ./db:/var/lib/postgresql/data
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - /home/chris/ssd/option_data:/app/db
+    networks:
+      webhost:
+        ipv4_address: 172.10.1.4
+    restart: unless-stopped
+networks:
+  webhost:
+    name: webhost
+    external: true
