@@ -1,3 +1,5 @@
+*.db
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -12,6 +14,13 @@ cert
 conf
 logs
 
+lib64
+lib
+bin
+share
+include
+pyvenv.cfg
+
 # Distribution / packaging
 .Python
 build/
@@ -22,6 +31,7 @@ eggs/
 .eggs/
 lib/
 lib64/
+share
 parts/
 sdist/
 var/
