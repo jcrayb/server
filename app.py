@@ -29,7 +29,7 @@ all_companies = requests.get('https://files.jcrayb.com/files/config/companies.js
 #connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
 
 ## PROD DB ##
-connection=sqlite3.connect('./db/options.db', check_same_thread=False)
+connection=sqlite3.connect(os.path.join(os.getcwd(), 'db/options.db'), check_same_thread=False)
 c=connection.cursor()
 
 
@@ -40,6 +40,53 @@ typesDict = {"lastPrice":"Closing Price",
              "openInterest":"Open Interest",
              "impliedVolatility":"Implied Volatility"
         }
+
+def _easter(year: int) -> dt.date:
+    """Compute Easter Sunday (Anonymous Gregorian algorithm)."""
+    a = year % 19
+    b, c = divmod(year, 100)
+    d, e = divmod(b, 4)
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i, k = divmod(c, 4)
+    l = (32 + 2 * e + 2 * i - h - k) % 7
+    m = (a + 11 * h + 22 * l) // 451
+    month = (h + l - 7 * m + 114) // 31
+    day = (h + l - 7 * m + 114) % 31 + 1
+    return dt.date(year, month, day)
+
+
+def _nyse_friday_holidays(year: int) -> set:
+    """Return dates of NYSE holidays that fall on a Friday for the given year."""
+    fridays = set()
+
+    def _observed(d: dt.date):
+        # Saturday holiday observed on Friday, Sunday observed on Monday (not a Friday case)
+        if d.weekday() == 5:
+            fridays.add(d - dt.timedelta(days=1))
+        elif d.weekday() == 4:
+            fridays.add(d)
+
+    _observed(dt.date(year, 1, 1))      # New Year's Day
+    _observed(dt.date(year, 6, 19))     # Juneteenth
+    _observed(dt.date(year, 7, 4))      # Independence Day
+    _observed(dt.date(year, 12, 25))    # Christmas Day
+    fridays.add(_easter(year) - dt.timedelta(days=2))  # Good Friday
+    return fridays
+
+
+def _is_valid_expiry(d: dt.datetime) -> bool:
+    """Return True if d is a valid options expiration day (Friday, or Thursday
+    when the following Friday is a NYSE holiday)."""
+    weekday = d.weekday()
+    if weekday == 4:
+        return True
+    if weekday == 3:
+        next_day = d.date() + dt.timedelta(days=1)
+        return next_day in _nyse_friday_holidays(next_day.year)
+    return False
+
 
 def getWeekdays(startDate, endDate):
     startDateDt = dt.datetime.strptime(startDate, "%Y-%m-%d")
@@ -201,8 +248,8 @@ def verifyInput(args):
     put_or_call = args['put_or_call']
     exp_date_dt = dt.datetime.strptime(exp_date, '%Y-%m-%d')
 
-    if not exp_date_dt.weekday() == 4:
-        return 'The expiration date you have entered is not a friday. Make sure you have entered a correct date.'
+    if not _is_valid_expiry(exp_date_dt):
+        return 'The expiration date you have entered is not a valid options expiration date. It must be a Friday (or a Thursday when Friday is a market holiday).'
 
     if yf.Ticker(ticker).history().empty:
         return 'The symbol you have entered is invalid. Make sure you have entered a correct symbol.'
@@ -776,4 +823,4 @@ def f1_min_map():
 
 if __name__ == '__main__':
     #app.run(host="0.0.0.0", port="8080", debug=True)
-    app.run(host="0.0.0.0", port="8080")
+    app.run(host="0.0.0.0", port="8081")
