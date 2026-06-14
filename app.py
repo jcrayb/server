@@ -29,7 +29,7 @@ all_companies = requests.get('https://files.jcrayb.com/files/config/companies.js
 #connection=sqlite3.connect(os.path.join(dev_db_folder, 'options.db'), check_same_thread=False)
 
 ## PROD DB ##
-connection=sqlite3.connect(os.path.join(os.getcwd(), 'db/options.db'), check_same_thread=False)
+connection=sqlite3.connect(os.path.join(os.getcwd(), 'db/new_options.db'), check_same_thread=False)
 c=connection.cursor()
 
 
