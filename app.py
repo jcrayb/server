@@ -248,9 +248,6 @@ def verifyInput(args):
     put_or_call = args['put_or_call']
     exp_date_dt = dt.datetime.strptime(exp_date, '%Y-%m-%d')
 
-    if not _is_valid_expiry(exp_date_dt):
-        return 'The expiration date you have entered is not a valid options expiration date. It must be a Friday (or a Thursday when Friday is a market holiday).'
-
     if yf.Ticker(ticker).history().empty:
         return 'The symbol you have entered is invalid. Make sure you have entered a correct symbol.'
 
