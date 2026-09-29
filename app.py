@@ -622,7 +622,7 @@ def dict_to_query(dict_):
     return l
 
 #old_conn=sqlite3.connect('/home/jcrayb/dev/backups/new_options.db', check_same_thread=False)
-old_conn=sqlite3.connect(os.path.join(os.getcwd(), 'options.db'), check_same_thread=False)
+old_conn=sqlite3.connect(os.path.join(os.getcwd(), 'db/options.db'), check_same_thread=False)
 old_c=old_conn.cursor()
 
 @app.route('/query', methods=['POST'])
