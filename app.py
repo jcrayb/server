@@ -32,7 +32,6 @@ all_companies = requests.get('https://files.jcrayb.com/files/config/companies.js
 connection=sqlite3.connect(os.path.join(os.getcwd(), 'db/new_options.db'), check_same_thread=False)
 c=connection.cursor()
 
-
 ##graph related stuff##
 
 typesDict = {"lastPrice":"Closing Price",
@@ -817,7 +816,37 @@ def f1_min_map():
 
     return {'content':fig.to_json()}
 
+def dict_to_query(dict_):
+    l = []
+    for (k, v) in dict_.items():
+        if isinstance(v, list):
+            if v[0]:
+                l.append(f'{k}>="{v[0]}"')
+            if v[1]:
+                l.append(f'{k}<="{v[1]}"')
+        else:
+            l.append(f'{k}="{v}"')
+    l = " AND ".join(l)
+    
+    return l
+
+#old_conn=sqlite3.connect('/home/jcrayb/dev/backups/new_options.db', check_same_thread=False)
+old_conn=sqlite3.connect(os.path.join(os.getcwd(), 'options.db'), check_same_thread=False)
+old_c=old_conn.cursor()
+
+@app.route('/query', methods=['POST'])
+def query():
+    query = dict_to_query(request.get_json())
+    print(query)
+    data = old_c.execute('''
+            SELECT * FROM options
+            WHERE %s
+            ORDER BY date;
+        ''' % (query, )).fetchall()
+    #print([list(d) for d in data])
+    return [list(d) for d in data]
+
 
 if __name__ == '__main__':
     #app.run(host="0.0.0.0", port="8080", debug=True)
-    app.run(host="0.0.0.0", port="8081")
+    app.run(host="0.0.0.0", port="8080")
